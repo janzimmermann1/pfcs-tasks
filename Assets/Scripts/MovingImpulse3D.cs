@@ -2,10 +2,11 @@ using UnityEngine;
 
 public class MovingImpulse3D: MonoBehaviour
 {
-    [SerializeField] public Vector3 Velocity = Vector3.zero;
+    [SerializeField] public float Speed = 0f;
     [SerializeField] public float Mass = 1f;
     [SerializeField] public MovingImpulse3D OtherCube;
     
+    private Vector3 _v = Vector3.zero;
     private Vector3 _a = Vector3.zero;
     private float _dt;
     private float _cubeSize = 1f;
@@ -15,15 +16,16 @@ public class MovingImpulse3D: MonoBehaviour
     {
         _dt = Time.fixedDeltaTime;
         _cubeSize = transform.localScale.x;
+        _v = transform.forward * Speed; // Geschwindigkeitsvektor in die Richtung des Cubes
     }
 
     void FixedUpdate()
     {
         var t = _dt / 2;
-        transform.position += Velocity * t;
+        transform.position += _v * t;
         
-        Velocity += _a * _dt;
-        transform.position += Velocity * t;
+        _v += _a * _dt;
+        transform.position += _v * t;
 
         if (!_isCollided)
         {
@@ -45,9 +47,9 @@ public class MovingImpulse3D: MonoBehaviour
         OtherCube._isCollided = true;
         
         float totalMass = Mass + OtherCube.Mass;
-        Vector3 combinedVelocity = (Mass * Velocity + OtherCube.Mass * OtherCube.Velocity) / totalMass;
+        Vector3 combinedVelocity = (Mass * _v + OtherCube.Mass * OtherCube._v) / totalMass;
 
-        Velocity = combinedVelocity;
-        OtherCube.Velocity = combinedVelocity;
+        _v = combinedVelocity;
+        OtherCube._v = combinedVelocity;
     }
 }
