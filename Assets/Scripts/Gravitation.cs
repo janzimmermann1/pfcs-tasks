@@ -1,51 +1,64 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class Gravitation : MonoBehaviour
 {
     public Transform center;
-    public float speed = 1f;
-    public float radius;
-    public float cyclesPerParentCircle = 3f;
-
-    private float _dt;
-    private Vector3 _v;
-    private float _rotationSpeed;
-    private bool _isStarted = false;
+    public float massEarth = 5.972e24f;
+    public float massComet = 1e11f;
     
+    public float radiusEarth = 6371f;
+    public Vector3 initialVelocity;
+    
+    public float G = 6.67430e-11f;
+
+    private Vector3 _v;
+    private float _scalingFactor = 1e6f;
+    private bool isStarted = false;
+    private float _dt;
+
     void Start()
     {
-        transform.position = new Vector3(center.position.x + radius, center.position.y, center.position.z);
+        _v = initialVelocity;
         _dt = Time.fixedDeltaTime;
-        _v = new Vector3(0, 0, speed);
-        var circumference = 2 * radius * Mathf.PI;
-        _rotationSpeed = circumference / speed / cyclesPerParentCircle;
     }
 
     void Update()
     {
         if (Input.GetKey("space"))
         {
-            _isStarted = true;
+            isStarted = true;
         }
     }
 
     void FixedUpdate()
     {
-        if (!_isStarted) return;
-        RotateObject();
-        LeapFrog();
+        if (!isStarted) return;
+
+        // distance between earth and comet (scaled)
+        Vector3 direction = (center.position - transform.position) * _scalingFactor;
+        float distance = direction.magnitude;
+        
+        if (distance <= 0) return; // Schutz vor Division durch Null
+        
+        // Calculate gravitationalForce: (G * mE * mC) / (distance^2) * direction
+        Vector3 gravitationalForce = (G * massEarth * massComet / (distance * distance)) * direction.normalized;
+
+        // Get acceleration on given force: (F = m * a => a = F / m)
+        Vector3 acceleration = gravitationalForce / massComet;
+
+        _v += acceleration * _dt;
+        transform.position += _v * _dt;
+        
+        if (distance < (radiusEarth / _scalingFactor))
+        {
+            BurnUp();
+        }
     }
 
-    private void RotateObject()
+    private void BurnUp()
     {
-        transform.Rotate(Vector3.up, 360 * _dt / _rotationSpeed);
-    }
-
-    private void LeapFrog()
-    {
-        var s_intermediate =  transform.position + _v * _dt / 2;
-        var intermediateAcc = (center.position - s_intermediate).normalized * (speed * speed / radius);
-        _v = _v + intermediateAcc * _dt;
-        transform.position = s_intermediate + _v * _dt / 2;
+        Debug.Log("Komet ist in der Erdatmosphäre verglüht!");
+        Destroy(gameObject);
     }
 }
