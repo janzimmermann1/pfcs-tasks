@@ -31,12 +31,10 @@ public class Gravitation : MonoBehaviour
 
     void FixedUpdate()
     {
-
         // distance between earth and comet (scaled)
         Vector3 direction = (center.position - transform.position) * _scalingFactor;
         float distance = direction.magnitude;
-        
-        if (distance <= 0) return; // Schutz vor Division durch Null
+        if (distance <= 0) return;
         
         // Calculate gravitationalForce: (G * mE * mC) / (distance^2) * direction
         Vector3 gravitationalForce = (G * massEarth * massComet / (distance * distance)) * direction.normalized;
@@ -51,7 +49,7 @@ public class Gravitation : MonoBehaviour
         {
             SpawnFlightCurvePoint();
         }
-        Debug.Log(distance + " < " + radiusEarth * _scalingFactor);
+        
         if (distance < radiusEarth * _scalingFactor)
         {
             BurnUp();
